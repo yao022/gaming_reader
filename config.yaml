@@ -1,0 +1,36 @@
+# Game Text Reader configuration
+
+# Language for OCR and TTS
+language: es
+
+# TTS voice (Microsoft Edge TTS voice identifier)
+# Spanish: es-ES-AlvaroNeural, es-ES-ElviraNeural, es-MX-DaliaNeural
+# English: en-US-GuyNeural, en-US-JennyNeural
+voice: es-ES-AlvaroNeural
+
+# Hotkey to trigger screen capture + read
+hotkey: f8
+
+# Screen capture backend: "dxcam" (faster, preferred) or "mss" (fallback)
+capture_backend: dxcam
+
+# OCR backend: "easyocr" (better with stylized fonts) or "pytesseract" (faster)
+ocr_backend: easyocr
+
+# TTS backend: "edge-tts" (natural voices, requires internet) or "pyttsx3" (offline)
+tts_backend: edge-tts
+
+# AI filter using Claude API to remove HUD/menu text and keep narrative content
+# Set to false if you don't have API credits
+ai_filter_enabled: true
+
+# Claude model to use for filtering
+ai_filter_model: claude-haiku-4-5-20251001
+
+# Sound feedback when capture is triggered
+sound_feedback: true
+
+# OCR languages (ISO 639-1 codes used by EasyOCR)
+ocr_languages:
+  - es
+  - en

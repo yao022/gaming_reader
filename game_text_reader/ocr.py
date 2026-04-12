@@ -1,0 +1,70 @@
+"""OCR text extraction using EasyOCR (preferred) or pytesseract (fallback)."""
+
+from __future__ import annotations
+
+import logging
+from typing import TYPE_CHECKING
+
+import numpy as np
+
+if TYPE_CHECKING:
+    from .config import Config
+
+logger = logging.getLogger(__name__)
+
+
+class OCREngine:
+    """Extracts text from a screen capture image."""
+
+    def __init__(self, config: Config) -> None:
+        self._backend = config.ocr_backend
+        self._languages = config.ocr_languages
+        self._easyocr_reader = None
+        self._init_backend()
+
+    def _init_backend(self) -> None:
+        if self._backend == "easyocr":
+            try:
+                import easyocr
+
+                logger.info(
+                    "Initializing EasyOCR (this may take a few seconds on first run)..."
+                )
+                self._easyocr_reader = easyocr.Reader(
+                    self._languages, gpu=True, verbose=False
+                )
+                logger.info("EasyOCR ready (languages: %s)", self._languages)
+            except Exception:
+                logger.warning("EasyOCR unavailable, falling back to pytesseract")
+                self._backend = "pytesseract"
+
+        if self._backend == "pytesseract":
+            logger.info("Using pytesseract OCR backend")
+
+    def extract(self, image: np.ndarray) -> str:
+        """Extract text from an RGB numpy array image. Returns concatenated text."""
+        if self._backend == "easyocr" and self._easyocr_reader is not None:
+            return self._extract_easyocr(image)
+        return self._extract_pytesseract(image)
+
+    def _extract_easyocr(self, image: np.ndarray) -> str:
+        results = self._easyocr_reader.readtext(image, detail=0, paragraph=True)
+        text = "\n".join(results)
+        logger.debug("EasyOCR extracted %d characters", len(text))
+        return text
+
+    def _extract_pytesseract(self, image: np.ndarray) -> str:
+        import pytesseract
+        from PIL import Image
+
+        pil_image = Image.fromarray(image)
+        lang_str = "+".join(self._tesseract_lang(l) for l in self._languages)
+        text = pytesseract.image_to_string(pil_image, lang=lang_str)
+        logger.debug("pytesseract extracted %d characters", len(text))
+        return text.strip()
+
+    @staticmethod
+    def _tesseract_lang(iso_code: str) -> str:
+        """Map ISO 639-1 codes to Tesseract language codes."""
+        mapping = {"es": "spa", "en": "eng", "fr": "fra", "de": "deu", "pt": "por", "it": "ita"}
+        return mapping.get(iso_code, iso_code)

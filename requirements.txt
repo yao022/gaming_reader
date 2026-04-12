@@ -1,0 +1,12 @@
+mss>=9.0
+dxcam>=0.4
+easyocr>=1.7
+pytesseract>=0.3
+anthropic>=0.30
+edge-tts>=6.1
+pyttsx3>=2.90
+keyboard>=0.13
+pyyaml>=6.0
+python-dotenv>=1.0
+numpy>=1.26
+Pillow>=10.0
