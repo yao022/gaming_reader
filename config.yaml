@@ -3,10 +3,12 @@
 # Language for OCR and TTS
 language: es
 
-# TTS voice (Microsoft Edge TTS voice identifier)
+# TTS voices per language (Microsoft Edge TTS voice identifiers)
 # Spanish: es-ES-AlvaroNeural, es-ES-ElviraNeural, es-MX-DaliaNeural
 # English: en-US-GuyNeural, en-US-JennyNeural
-voice: es-ES-AlvaroNeural
+voices:
+  es: es-ES-AlvaroNeural
+  en: en-US-GuyNeural
 
 # Hotkey to trigger screen capture + read
 hotkey: f8

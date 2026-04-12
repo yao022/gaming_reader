@@ -13,7 +13,7 @@ from game_text_reader.config import Config, load_config
 def test_default_config():
     cfg = Config()
     assert cfg.language == "es"
-    assert cfg.voice == "es-ES-AlvaroNeural"
+    assert cfg.voices == {"es": "es-ES-AlvaroNeural", "en": "en-US-GuyNeural"}
     assert cfg.hotkey == "f8"
     assert cfg.capture_backend == "dxcam"
     assert cfg.ocr_backend == "easyocr"
@@ -24,7 +24,11 @@ def test_default_config():
 
 
 def test_load_config_from_yaml():
-    data = {"language": "en", "hotkey": "f9", "voice": "en-US-GuyNeural"}
+    data = {
+        "language": "en",
+        "hotkey": "f9",
+        "voices": {"es": "es-MX-DaliaNeural", "en": "en-US-JennyNeural"},
+    }
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         yaml.dump(data, f)
         f.flush()
@@ -32,7 +36,7 @@ def test_load_config_from_yaml():
 
     assert cfg.language == "en"
     assert cfg.hotkey == "f9"
-    assert cfg.voice == "en-US-GuyNeural"
+    assert cfg.voices["en"] == "en-US-JennyNeural"
     # Defaults should still apply for unset keys
     assert cfg.capture_backend == "dxcam"
 

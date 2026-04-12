@@ -16,7 +16,7 @@ _DEFAULT_CONFIG_PATH = _PROJECT_ROOT / "config.yaml"
 
 _DEFAULTS = {
     "language": "es",
-    "voice": "es-ES-AlvaroNeural",
+    "voices": {"es": "es-ES-AlvaroNeural", "en": "en-US-GuyNeural"},
     "hotkey": "f8",
     "capture_backend": "dxcam",
     "ocr_backend": "easyocr",
@@ -31,7 +31,9 @@ _DEFAULTS = {
 @dataclass
 class Config:
     language: str = "es"
-    voice: str = "es-ES-AlvaroNeural"
+    voices: dict[str, str] = field(
+        default_factory=lambda: {"es": "es-ES-AlvaroNeural", "en": "en-US-GuyNeural"}
+    )
     hotkey: str = "f8"
     capture_backend: str = "dxcam"
     ocr_backend: str = "easyocr"
