@@ -34,11 +34,27 @@ def main() -> None:
         config.ai_filter_enabled,
     )
 
+    # Verify API key is loaded if AI filter is enabled
+    import os
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if config.ai_filter_enabled:
+        if api_key:
+            logger.info("ANTHROPIC_API_KEY loaded (%s...%s)", api_key[:10], api_key[-4:])
+        else:
+            logger.warning("ANTHROPIC_API_KEY is NOT set — AI filter will not work!")
+
     logger.info("Initializing components...")
     capture = ScreenCapture(config)
     ocr = OCREngine(config)
     text_filter = TextFilter(config)
     tts = TTSEngine(config)
+
+    if not text_filter._enabled:
+        logger.warning(
+            ">>> AI FILTER IS OFF — text will NOT be filtered or reconstructed. "
+            "Check your .env file and ANTHROPIC_API_KEY."
+        )
 
     listener = HotkeyListener(config, capture, ocr, text_filter, tts)
 
