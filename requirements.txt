@@ -1,4 +1,5 @@
 mss>=9.0
+winsdk>=1.0
 dxcam>=0.3
 easyocr>=1.7
 pytesseract>=0.3

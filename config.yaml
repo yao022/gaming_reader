@@ -19,8 +19,11 @@ hotkey_local: f9
 # Screen capture backend: "dxcam" (faster, preferred) or "mss" (fallback)
 capture_backend: dxcam
 
-# OCR backend: "easyocr" (better with stylized fonts) or "pytesseract" (faster)
-ocr_backend: easyocr
+# OCR backend:
+#   "winrt"       — Windows built-in OCR, hardware-accelerated (AMD/Intel GPU), fastest (~0.2s)
+#   "easyocr"     — deep-learning OCR, best accuracy but slow on CPU (~3s)
+#   "pytesseract" — traditional OCR, faster than easyocr on CPU
+ocr_backend: winrt
 
 # TTS backend: "edge-tts" (natural voices, requires internet) or "pyttsx3" (offline)
 tts_backend: edge-tts

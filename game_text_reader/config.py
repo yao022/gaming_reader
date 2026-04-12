@@ -20,7 +20,7 @@ _DEFAULTS = {
     "hotkey": "f8",
     "hotkey_local": "f9",
     "capture_backend": "dxcam",
-    "ocr_backend": "easyocr",
+    "ocr_backend": "winrt",
     "tts_backend": "edge-tts",
     "ai_filter_enabled": True,
     "ai_filter_model": "claude-3-haiku-20240307",
@@ -38,7 +38,7 @@ class Config:
     hotkey: str = "f8"
     hotkey_local: str = "f9"
     capture_backend: str = "dxcam"
-    ocr_backend: str = "easyocr"
+    ocr_backend: str = "winrt"
     tts_backend: str = "edge-tts"
     ai_filter_enabled: bool = True
     ai_filter_model: str = "claude-3-haiku-20240307"
