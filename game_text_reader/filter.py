@@ -118,7 +118,12 @@ class TextFilter:
             logger.info("AI filter: %d chars → %d chars", len(raw_text), len(filtered))
             return filtered
         except Exception as e:
-            logger.error("AI filter failed: %s — returning raw text", e)
+            err = str(e)
+            if "credit balance is too low" in err:
+                print("\n[WARNING] Anthropic API: insufficient credits — go to https://console.anthropic.com/settings/billing")
+                logger.warning("Anthropic credits too low — AI filter skipped")
+            else:
+                logger.error("AI filter failed: %s — returning raw text", e)
             return raw_text
 
 
