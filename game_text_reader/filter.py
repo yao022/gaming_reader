@@ -57,22 +57,38 @@ class TextFilter:
             logger.warning("AI filter is disabled in config.yaml")
 
     def _init_client(self) -> None:
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        # Try loading .env directly as a fallback in case config.py didn't load it
+        from pathlib import Path
+
+        from dotenv import load_dotenv
+
+        env_path = Path(__file__).resolve().parent.parent / ".env"
+        load_dotenv(env_path, override=True)
+
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
         if not api_key:
-            logger.warning(
-                "ANTHROPIC_API_KEY not set — AI filter disabled. "
+            msg = (
+                "ANTHROPIC_API_KEY not found in environment or .env file — AI filter disabled. "
                 "Set it in .env or disable ai_filter_enabled in config.yaml"
             )
+            logger.warning(msg)
+            print(f"\n[WARNING]  {msg}\n")
             self._enabled = False
             return
+
+        logger.info("ANTHROPIC_API_KEY found (%s...%s)", api_key[:10], api_key[-4:])
 
         try:
             import anthropic
 
             self._client = anthropic.Anthropic(api_key=api_key)
+            # Quick validation: this doesn't make an API call, just checks the client exists
             logger.info("AI text filter ready (model: %s)", self._model)
+            print(f"[OK] AI filter active (model: {self._model})")
         except Exception as e:
-            logger.warning("Failed to initialize Anthropic client: %s", e)
+            msg = f"Failed to initialize Anthropic client: {e}"
+            logger.warning(msg)
+            print(f"\n[WARNING]  {msg}\n")
             self._enabled = False
 
     def filter(self, raw_text: str) -> str:

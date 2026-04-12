@@ -46,7 +46,9 @@ class Config:
 
 def load_config(config_path: Path | str | None = None) -> Config:
     """Load configuration from YAML file and environment variables."""
-    load_dotenv(_PROJECT_ROOT / ".env")
+    env_path = _PROJECT_ROOT / ".env"
+    loaded = load_dotenv(env_path, override=True)
+    logger.info(".env path: %s (exists=%s, loaded=%s)", env_path, env_path.exists(), loaded)
 
     path = Path(config_path) if config_path else _DEFAULT_CONFIG_PATH
 
