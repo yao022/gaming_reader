@@ -37,6 +37,7 @@ single characters, nonsensical sequences like "@ | * | e | @").
    - "4" often means "t" (e.g. "i4" → "it")
    - "0" often means "o" (e.g. "04'" → "of")
    - "1" often means "I" (e.g. "1 doubf" → "I doubt")
+   - "l" at the end of a word before ")" often means "!" (e.g. "latel)" → "late!")
    - Letters get swapped, merged, or garbled — use context to figure out the real words
    - Punctuation and spacing get mangled
    Use your knowledge of common game narratives, English, and Spanish to reconstruct the text.
@@ -241,6 +242,9 @@ def local_ocr_fix(text: str) -> str:
     text = re.sub(r"(?<!\w)\d\s+(?=You\b|were\b|the\b)", "", text)
 
     # Word-specific f→t / garble fixes
+    # "!" misread as "l" before closing paren (e.g. "latel)" → "late!)")
+    text = re.sub(r"(\w)l(\s*\))", r"\1!\2", text)
+
     text = re.sub(r"\bdoubf\b", "doubt", text, flags=re.IGNORECASE)
     text = re.sub(r"\bwanf\b", "want", text, flags=re.IGNORECASE)
     text = re.sub(r"\blef\b", "let", text, flags=re.IGNORECASE)
