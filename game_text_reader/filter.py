@@ -109,7 +109,12 @@ _URL_PATTERN = re.compile(
     r"https?://\S+|www\.\S+|[a-zA-Z0-9_-]+\.(com|net|org|io|png|jpg|jpeg|gif|html)\S*",
     re.IGNORECASE,
 )
-_SYMBOL_NOISE = re.compile(r"[#+=%&@{}\[\]<>|\\^~`]")
+# File paths like C:\foo\bar or /foo/bar/image.png
+_PATH_PATTERN = re.compile(r"[A-Za-z]:\\[\w\\.-]+|/[\w/.-]{5,}")
+# Symbols that TTS reads literally as words ("plus", "hashtag", "slash", "asterisk", etc.)
+_SYMBOL_NOISE = re.compile(r"[#+*=%&@{}\[\]<>|\\^~`/]")
+# Repeated junk like "0*0*00*" or "0 0 00 0" — numeric noise from HUD/UI
+_NUMERIC_NOISE = re.compile(r"(?:\d[\s*.,;:|x×-]*){4,}")
 _MULTI_SPACE = re.compile(r"  +")
 _EMPTY_LINES = re.compile(r"\n\s*\n\s*\n+")
 
@@ -118,7 +123,11 @@ def clean_for_speech(text: str) -> str:
     """Remove URLs, stray symbols, and OCR noise so TTS reads cleanly."""
     # Strip URLs
     text = _URL_PATTERN.sub("", text)
-    # Strip symbols that TTS reads literally ("plus", "hashtag", etc.)
+    # Strip file paths
+    text = _PATH_PATTERN.sub("", text)
+    # Strip numeric noise (HUD counters, codes like 0*0*00*)
+    text = _NUMERIC_NOISE.sub("", text)
+    # Strip symbols that TTS reads literally ("plus", "hashtag", "slash", "asterisk")
     text = _SYMBOL_NOISE.sub("", text)
     # Collapse leftover whitespace
     text = _MULTI_SPACE.sub(" ", text)

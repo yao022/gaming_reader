@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 import winsound
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -77,23 +79,21 @@ class HotkeyListener:
                     winsound.Beep(400, 100)
                 return
 
-            logger.info("OCR result (%d chars): %.100s...", len(raw_text), raw_text)
+            logger.info("OCR result (%d chars)", len(raw_text))
 
             logger.info("Filtering text...")
             filtered_text = self._filter.filter(raw_text)
-            if not filtered_text.strip():
-                logger.info("No narrative text after filtering")
-                if self._sound_feedback:
-                    winsound.Beep(400, 100)
-                    winsound.Beep(400, 100)
-                return
 
             # Clean symbols/URLs that TTS would read literally
             from .filter import clean_for_speech
 
-            cleaned_text = clean_for_speech(filtered_text)
+            cleaned_text = clean_for_speech(filtered_text) if filtered_text.strip() else ""
+
+            # Write debug log so we can inspect what each stage produced
+            self._write_debug_log(raw_text, filtered_text, cleaned_text)
+
             if not cleaned_text:
-                logger.info("No text left after cleaning for speech")
+                logger.info("No narrative text after filtering/cleaning")
                 if self._sound_feedback:
                     winsound.Beep(400, 100)
                     winsound.Beep(400, 100)
@@ -109,3 +109,28 @@ class HotkeyListener:
                 winsound.Beep(300, 300)
         finally:
             self._processing = False
+
+    @staticmethod
+    def _write_debug_log(raw_ocr: str, filtered: str, cleaned: str) -> None:
+        """Write the full text at each pipeline stage to a debug log file."""
+        log_dir = Path(__file__).resolve().parent.parent / "debug_logs"
+        log_dir.mkdir(exist_ok=True)
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        log_path = log_dir / f"capture_{timestamp}.txt"
+        with open(log_path, "w", encoding="utf-8") as f:
+            f.write("=" * 60 + "\n")
+            f.write("STAGE 1: RAW OCR OUTPUT\n")
+            f.write("=" * 60 + "\n")
+            f.write(raw_ocr)
+            f.write("\n\n")
+            f.write("=" * 60 + "\n")
+            f.write("STAGE 2: AFTER AI FILTER\n")
+            f.write("=" * 60 + "\n")
+            f.write(filtered)
+            f.write("\n\n")
+            f.write("=" * 60 + "\n")
+            f.write("STAGE 3: AFTER CLEAN FOR SPEECH (sent to TTS)\n")
+            f.write("=" * 60 + "\n")
+            f.write(cleaned)
+            f.write("\n")
+        logger.info("Debug log written to %s", log_path)
