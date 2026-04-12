@@ -138,10 +138,22 @@ class TTSEngine:
             voices = engine.getProperty("voices")
             lang_keywords = {"es": "spanish", "en": "english", "fr": "french", "de": "german"}
             keyword = lang_keywords.get(lang, lang)
+            selected_voice = None
             for v in voices:
-                if keyword in v.name.lower() or lang in v.id.lower():
+                if keyword in v.name.lower() or f"-{lang}-" in v.id.lower() or v.id.lower().endswith(f"_{lang}_"):
                     engine.setProperty("voice", v.id)
+                    selected_voice = v.name
                     break
+            if selected_voice:
+                logger.info("pyttsx3 voice selected: %s", selected_voice)
+            else:
+                available = [v.name for v in voices]
+                logger.warning(
+                    "pyttsx3: no voice found for lang='%s'. "
+                    "Available voices: %s. "
+                    "Install English voice: Settings → Time & Language → Speech → Add voices.",
+                    lang, available,
+                )
             engine.setProperty("rate", 170)
             engine.say(text)
             engine.runAndWait()
