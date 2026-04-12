@@ -95,22 +95,31 @@ class TTSEngine:
         try:
             import edge_tts
 
-            async def _stream_and_play() -> None:
+            async def _stream() -> bytes:
+                """Collect all audio bytes from edge-tts."""
                 communicate = edge_tts.Communicate(text, voice)
-                # Write audio chunks to temp file
-                with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
-                    tmp_path = tmp.name
+                buf = bytearray()
                 async for chunk in communicate.stream():
                     if chunk["type"] == "audio":
-                        with open(tmp_path, "ab") as f:
-                            f.write(chunk["data"])
+                        buf.extend(chunk["data"])
+                return bytes(buf)
+
+            audio_bytes = asyncio.run(_stream())
+            if not audio_bytes:
+                raise RuntimeError("edge-tts returned no audio")
+
+            # Try fast ffplay pipe first (starts playing immediately, no temp file)
+            if not _play_mp3_ffplay_pipe(audio_bytes):
+                # Fall back to MCI (writes temp file, then plays)
+                with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+                    tmp.write(audio_bytes)
+                    tmp_path = tmp.name
                 _play_mp3_mci(tmp_path)
                 try:
                     os.unlink(tmp_path)
                 except OSError:
                     pass
 
-            asyncio.run(_stream_and_play())
         except Exception as e:
             logger.error("edge-tts failed: %s — trying pyttsx3 fallback", e)
             self._speak_pyttsx3(text, lang)
@@ -135,8 +144,30 @@ class TTSEngine:
             logger.error("pyttsx3 TTS failed: %s", e)
 
 
+def _play_mp3_ffplay_pipe(audio_bytes: bytes) -> bool:
+    """Stream mp3 bytes to ffplay via stdin — playback starts with first chunk.
+
+    Returns True if ffplay is available and playback succeeded, False otherwise.
+    """
+    import subprocess
+
+    try:
+        proc = subprocess.run(
+            ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", "-i", "pipe:0"],
+            input=audio_bytes,
+            capture_output=True,
+            creationflags=0x08000000,  # CREATE_NO_WINDOW
+        )
+        return proc.returncode == 0
+    except FileNotFoundError:
+        return False  # ffplay not installed
+    except Exception as e:
+        logger.warning("ffplay pipe failed: %s", e)
+        return False
+
+
 def _play_mp3_mci(path: str) -> None:
-    """Play an mp3 file using Windows MCI (winmm.dll) — fast, no PowerShell needed."""
+    """Play an mp3 file using Windows MCI (winmm.dll) — no PowerShell needed."""
     try:
         winmm = ctypes.windll.winmm  # type: ignore[attr-defined]
         alias = "gtr_audio"
@@ -144,19 +175,5 @@ def _play_mp3_mci(path: str) -> None:
         winmm.mciSendStringW(f"play {alias} wait", None, 0, None)
         winmm.mciSendStringW(f"close {alias}", None, 0, None)
     except Exception as e:
-        logger.warning("MCI playback failed (%s), trying ffplay fallback", e)
-        _play_mp3_ffplay(path)
-
-
-def _play_mp3_ffplay(path: str) -> None:
-    """Fallback: play mp3 via ffplay subprocess."""
-    import subprocess
-
-    try:
-        subprocess.run(
-            ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", path],
-            check=False,
-            capture_output=True,
-        )
-    except FileNotFoundError:
-        logger.error("No audio player available (MCI failed and ffplay not found)")
+        logger.warning("MCI playback failed (%s)", e)
+        logger.error("No working audio player — install ffmpeg for best performance")
