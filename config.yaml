@@ -28,6 +28,9 @@ ocr_backend: winrt
 # TTS backend: "edge-tts" (natural voices, requires internet) or "pyttsx3" (offline)
 tts_backend: edge-tts
 
+# TTS backend for local mode (F9) — pyttsx3 is offline/instant (no network delay)
+tts_backend_local: pyttsx3
+
 # AI filter using Claude API to remove HUD/menu text and keep narrative content
 # Set to false if you don't have API credits
 ai_filter_enabled: true

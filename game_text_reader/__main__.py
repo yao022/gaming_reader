@@ -50,13 +50,23 @@ def main() -> None:
     text_filter = TextFilter(config)
     tts = TTSEngine(config)
 
+    # Local mode (F9) uses a separate TTS engine — pyttsx3 by default so it's
+    # offline and instant (no network download like edge-tts).
+    if config.tts_backend_local != config.tts_backend:
+        from dataclasses import replace as dc_replace
+        local_config = dc_replace(config, tts_backend=config.tts_backend_local)
+        tts_local = TTSEngine(local_config)
+        logger.info("Local TTS backend: %s", config.tts_backend_local)
+    else:
+        tts_local = tts
+
     if not text_filter._enabled:
         logger.warning(
             ">>> AI FILTER IS OFF — text will NOT be filtered or reconstructed. "
             "Check your .env file and ANTHROPIC_API_KEY."
         )
 
-    listener = HotkeyListener(config, capture, ocr, text_filter, tts)
+    listener = HotkeyListener(config, capture, ocr, text_filter, tts, tts_local)
 
     try:
         listener.start()

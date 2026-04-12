@@ -34,6 +34,7 @@ class HotkeyListener:
         ocr: OCREngine,
         text_filter: TextFilter,
         tts: TTSEngine,
+        tts_local: TTSEngine | None = None,
     ) -> None:
         self._hotkey = config.hotkey
         self._hotkey_local = config.hotkey_local
@@ -42,6 +43,7 @@ class HotkeyListener:
         self._ocr = ocr
         self._filter = text_filter
         self._tts = tts
+        self._tts_local = tts_local if tts_local is not None else tts
         self._processing = False
 
     def start(self) -> None:
@@ -117,8 +119,9 @@ class HotkeyListener:
                     winsound.Beep(400, 100)
                 return
 
+            tts_engine = self._tts if use_ai else self._tts_local
             logger.info("Starting TTS (%d chars)... total so far: %.2fs", len(cleaned_text), t4 - t0)
-            self._tts.speak(cleaned_text)
+            tts_engine.speak(cleaned_text)
             logger.info("TTS dispatched (total pipeline: %.2fs)", time.perf_counter() - t0)
 
         except Exception:

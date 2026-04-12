@@ -156,6 +156,10 @@ _URL_LINE = re.compile(
     r"nocookie|wikia\.)",
     re.IGNORECASE,
 )
+# Lines with digits jammed next to letters — OCR noise from URLs/timestamps
+# e.g. "21z602876200", "20260z2116ai52", "rotralaoegeciopen 82500072"
+# Real game text never has 5+ consecutive digits touching letters like this.
+_DIGIT_LETTER_MIX = re.compile(r"[a-zA-Z]\d{5,}|\d{5,}[a-zA-Z]|\d{4}[a-zA-Z]\d{3,}")
 _PATH_NOISE = re.compile(r"[A-Za-z]:\\[\w\\.-]+")
 
 # OS / taskbar patterns — match common Spanish Windows taskbar text
@@ -189,6 +193,9 @@ def local_ocr_fix(text: str) -> str:
             continue
         # Drop URL lines (including mangled ones where OCR removed the dots)
         if _URL_LINE.search(stripped):
+            continue
+        # Drop lines with digit-letter mixing typical of URL timestamps/IDs
+        if _DIGIT_LETTER_MIX.search(stripped):
             continue
         stripped = _URL_NOISE.sub("", stripped).strip()
         if not stripped:

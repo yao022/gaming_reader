@@ -22,6 +22,7 @@ _DEFAULTS = {
     "capture_backend": "dxcam",
     "ocr_backend": "winrt",
     "tts_backend": "edge-tts",
+    "tts_backend_local": "pyttsx3",
     "ai_filter_enabled": True,
     "ai_filter_model": "claude-3-haiku-20240307",
     "sound_feedback": True,
@@ -40,6 +41,7 @@ class Config:
     capture_backend: str = "dxcam"
     ocr_backend: str = "winrt"
     tts_backend: str = "edge-tts"
+    tts_backend_local: str = "pyttsx3"
     ai_filter_enabled: bool = True
     ai_filter_model: str = "claude-3-haiku-20240307"
     sound_feedback: bool = True
