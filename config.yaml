@@ -10,8 +10,11 @@ voices:
   es: es-ES-AlvaroNeural
   en: en-US-GuyNeural
 
-# Hotkey to trigger screen capture + read
+# Hotkey to trigger screen capture + read (with AI filter when available)
 hotkey: f8
+
+# Hotkey for local-only mode (no AI filter, no API cost, faster)
+hotkey_local: f9
 
 # Screen capture backend: "dxcam" (faster, preferred) or "mss" (fallback)
 capture_backend: dxcam

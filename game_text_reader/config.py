@@ -18,6 +18,7 @@ _DEFAULTS = {
     "language": "es",
     "voices": {"es": "es-ES-AlvaroNeural", "en": "en-US-GuyNeural"},
     "hotkey": "f8",
+    "hotkey_local": "f9",
     "capture_backend": "dxcam",
     "ocr_backend": "easyocr",
     "tts_backend": "edge-tts",
@@ -35,6 +36,7 @@ class Config:
         default_factory=lambda: {"es": "es-ES-AlvaroNeural", "en": "en-US-GuyNeural"}
     )
     hotkey: str = "f8"
+    hotkey_local: str = "f9"
     capture_backend: str = "dxcam"
     ocr_backend: str = "easyocr"
     tts_backend: str = "edge-tts"
