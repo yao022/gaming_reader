@@ -21,11 +21,49 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+# Common words that strongly indicate the language.
+# Used for short texts where langdetect is unreliable.
+_EN_WORDS = frozenset(
+    "the is are was were you your this that with from have has will can "
+    "not but and for welcome aboard find look into been would could should "
+    "do did does it he she they we our them what when where how who "
+    "about up out all get go make know take come think also back only "
+    "just people good new first last long great little own old right big "
+    "top priority library book training plan recruit pick girls missing "
+    "checked captain plan join shoot range".split()
+)
+_ES_WORDS = frozenset(
+    "las los del una por que está como pero con para más son hay las "
+    "este esta estos estas ese esa esos esas aquel aquella también "
+    "todo todos toda todas hacer puede desde sobre entre cuando donde "
+    "quien fue ser sido era muy bien ahora aquí allí después antes "
+    "durante mientras porque aunque sin embargo sino cada mucho poco "
+    "otro otra nuevo nueva gran mejor peor mismo misma prioridad "
+    "biblioteca libro buscar entregar formación nuevo última persona".split()
+)
+
+
 def detect_language(text: str, default: str = "es") -> str:
     """Detect the language of *text*, returning an ISO 639-1 code (e.g. 'es', 'en').
 
-    Falls back to *default* when detection is uncertain or the library is missing.
+    For short texts (< 50 chars or < 8 words), uses word-based heuristics
+    since langdetect is unreliable with small samples. Falls back to *default*
+    when detection is uncertain or the library is missing.
     """
+    words = set(text.lower().split())
+
+    # For short text, word matching is more reliable than langdetect
+    if len(text) < 80 or len(words) < 8:
+        en_hits = len(words & _EN_WORDS)
+        es_hits = len(words & _ES_WORDS)
+        if en_hits > es_hits:
+            logger.debug("Short-text heuristic → en (%d en, %d es hits)", en_hits, es_hits)
+            return "en"
+        if es_hits > en_hits:
+            logger.debug("Short-text heuristic → es (%d es, %d en hits)", es_hits, en_hits)
+            return "es"
+        # Tie or no hits — fall through to langdetect
+
     try:
         from langdetect import LangDetectException, detect
 
