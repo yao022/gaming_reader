@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Max width fed to OCR. Game text is large enough that downscaling doesn't
 # hurt recognition quality but cuts inference time significantly.
-_MAX_OCR_WIDTH = 1280
+_MAX_OCR_WIDTH = 960
 
 
 def _downscale(image: np.ndarray) -> np.ndarray:

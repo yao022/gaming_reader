@@ -12,6 +12,7 @@ import logging
 import os
 import tempfile
 import threading
+import time
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -104,9 +105,12 @@ class TTSEngine:
                         buf.extend(chunk["data"])
                 return bytes(buf)
 
+            t0 = time.perf_counter()
             audio_bytes = asyncio.run(_stream())
+            t1 = time.perf_counter()
             if not audio_bytes:
                 raise RuntimeError("edge-tts returned no audio")
+            logger.info("edge-tts download: %.2fs (%d bytes)", t1 - t0, len(audio_bytes))
 
             # Try fast ffplay pipe first (starts playing immediately, no temp file)
             if not _play_mp3_ffplay_pipe(audio_bytes):
@@ -114,6 +118,8 @@ class TTSEngine:
                 with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
                     tmp.write(audio_bytes)
                     tmp_path = tmp.name
+                t2 = time.perf_counter()
+                logger.info("edge-tts playback start (MCI): %.2fs after download", t2 - t1)
                 _play_mp3_mci(tmp_path)
                 try:
                     os.unlink(tmp_path)
