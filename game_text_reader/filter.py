@@ -336,7 +336,7 @@ _FINAL_EMPTY = re.compile(r"\n\s*\n\s*\n+")
 
 
 def clean_for_speech(text: str) -> str:
-    """Final pass: strip any remaining URLs, symbols, and short junk lines."""
+    """Final pass: strip remaining noise and join fragmented lines for fluent TTS."""
     # Replace bullet/dash list markers with nothing (TTS would say "bullet")
     text = re.sub(r"^[\s•·▪▸\-–—]+", "", text, flags=re.MULTILINE)
     text = _FINAL_URL.sub("", text)
@@ -344,5 +344,20 @@ def clean_for_speech(text: str) -> str:
     text = _FINAL_SHORT_LINES.sub("", text)
     text = _FINAL_SPACES.sub(" ", text)
     text = _FINAL_EMPTY.sub("\n\n", text)
-    lines = [line for line in text.splitlines() if line.strip()]
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+
+    # Join fragmented lines into flowing sentences.
+    # If a line does NOT end with sentence-ending punctuation, it's probably
+    # a fragment that continues on the next line — join with a space.
+    if lines:
+        merged = [lines[0]]
+        for line in lines[1:]:
+            prev = merged[-1]
+            if prev and prev[-1] not in ".!?:;":
+                # Previous line didn't end a sentence → join
+                merged[-1] = prev + " " + line
+            else:
+                merged.append(line)
+        lines = merged
+
     return "\n".join(lines).strip()

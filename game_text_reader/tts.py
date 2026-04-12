@@ -43,12 +43,23 @@ _ES_WORDS = frozenset(
 )
 
 
-def detect_language(text: str, default: str = "es") -> str:
-    """Detect the language of *text*, returning an ISO 639-1 code (e.g. 'es', 'en').
+# Languages that are often confused with our supported ones by langdetect
+_LANG_MAP = {
+    "pt": "es",  # Portuguese ↔ Spanish (very common confusion)
+    "ca": "es",  # Catalan → Spanish
+    "gl": "es",  # Galician → Spanish
+    "it": "es",  # Italian → Spanish (sometimes confused)
+}
 
-    For short texts (< 50 chars or < 8 words), uses word-based heuristics
-    since langdetect is unreliable with small samples. Falls back to *default*
-    when detection is uncertain or the library is missing.
+
+def detect_language(
+    text: str, default: str = "es", supported: frozenset[str] = frozenset(("es", "en"))
+) -> str:
+    """Detect the language of *text*, returning only a supported language code.
+
+    For short texts (< 80 chars or < 8 words), uses word-based heuristics
+    since langdetect is unreliable with small samples. Any unsupported
+    language is mapped to the closest supported one, or to *default*.
     """
     words = set(text.lower().split())
 
@@ -69,6 +80,13 @@ def detect_language(text: str, default: str = "es") -> str:
 
         lang = detect(text)
         lang = lang.split("-")[0]
+
+        # Map to supported language if needed
+        if lang not in supported:
+            mapped = _LANG_MAP.get(lang, default)
+            logger.debug("Detected '%s' → mapped to '%s' (not in supported: %s)", lang, mapped, supported)
+            return mapped
+
         logger.debug("Detected language: %s", lang)
         return lang
     except LangDetectException:
