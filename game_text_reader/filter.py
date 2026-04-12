@@ -141,27 +141,31 @@ class TextFilter:
 # Matches a sequence of at least 4 consecutive letters — real word content
 _HAS_REAL_WORD = re.compile(r"[a-zA-ZáéíóúñüÁÉÍÓÚÑÜ]{4,}")
 
-# URL / path noise
+# URL / path noise (with dots present)
 _URL_NOISE = re.compile(
     r"https?://\S+|www\.\S+|\S*(nocookie|wikia|static|revision|thelastofus)\S*"
     r"|\S*\.(com|net|org|io|png|jpg|jpeg|gif|html)\S*",
     re.IGNORECASE,
 )
-# Lines that are mostly a URL/path fragment after other cleaning
-_URL_FRAGMENT_LINE = re.compile(
-    r"^\s*\d*\s*(net|www|http|static|wiki)\b.*$",
+# Whole-line URL detection — catches mangled URLs where OCR removed dots
+# e.g. "srcdncom wordpresswp-contentfuploads64200 png?q49fitcropw825dpr2"
+_URL_LINE = re.compile(
+    r"(wordpress|wp-content|srcdn|fitcrop|dpr\d|uploads/\d|"
+    r"png\?q|jpg\?q|jpeg\?|static\d|revision/|thelastofus|"
+    r"nocookie|wikia\.)",
     re.IGNORECASE,
 )
 _PATH_NOISE = re.compile(r"[A-Za-z]:\\[\w\\.-]+")
 
 # OS / taskbar patterns — match common Spanish Windows taskbar text
+# Also catches OCR mangling: Mayorm→Havorm, °C→€C, soleado→soleadc
 _OS_NOISE = re.compile(
-    r"\b(Buscar|Parc\.?\s*soleado|nublado|Mayorm[:\.]?\s*\w*)\b"
+    r"\b(Buscar|Parc\.?\s*solea\w*|nublado|[HMB]avorm[:\.]?\s*\w*|Mayorm[:\.]?\s*\w*)\b"
     r"|\d{1,2}[:/]\d{2}(:\d{2})?"   # times like 17:38, 18.06
     r"|\d{1,2}\.\d{2}\b"             # time with dot separator like 18.06
     r"|\d{1,2}/\d{2}/\d{4}"          # dates like 12/04/2026
     r"|\b\d{4}\b"                     # bare years like 2026
-    r"|\d{1,2}\s*°?\s*C\b",          # temperatures like 13 C
+    r"|\d{1,2}\s*[°€]?\s*[C€]\b",    # temperatures: 13 C, 12 €, 12°C
     re.IGNORECASE,
 )
 
@@ -182,12 +186,11 @@ def local_ocr_fix(text: str) -> str:
         # Drop lines with no real word content (no run of 4+ letters)
         if not _HAS_REAL_WORD.search(stripped):
             continue
-        # Drop URL lines
+        # Drop URL lines (including mangled ones where OCR removed the dots)
+        if _URL_LINE.search(stripped):
+            continue
         stripped = _URL_NOISE.sub("", stripped).strip()
         if not stripped:
-            continue
-        # Drop URL fragment lines (e.g. "20 net", "25 static...")
-        if _URL_FRAGMENT_LINE.match(stripped):
             continue
         # Drop OS/taskbar lines (date, time, weather, "Buscar", "Mayorm")
         stripped = _OS_NOISE.sub("", stripped).strip()

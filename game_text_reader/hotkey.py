@@ -72,6 +72,7 @@ class HotkeyListener:
     def _run_pipeline(self, use_ai: bool) -> None:
         """Execute the pipeline: beep → capture → OCR → filter → TTS."""
         self._processing = True
+        t0 = time.perf_counter()
         try:
             if self._sound_feedback:
                 # Different beep pitch for AI vs local so you can tell them apart
@@ -79,10 +80,13 @@ class HotkeyListener:
 
             logger.info("Capturing screen... (mode: %s)", "AI" if use_ai else "local")
             image = self._capture.grab()
-            logger.info("Captured (%dx%d)", image.shape[1], image.shape[0])
+            t1 = time.perf_counter()
+            logger.info("Captured (%dx%d) in %.2fs", image.shape[1], image.shape[0], t1 - t0)
 
             logger.info("Running OCR...")
             raw_text = self._ocr.extract(image)
+            t2 = time.perf_counter()
+            logger.info("OCR done in %.2fs (%d chars)", t2 - t1, len(raw_text))
             if not raw_text.strip():
                 logger.info("No text detected")
                 if self._sound_feedback:
@@ -96,9 +100,13 @@ class HotkeyListener:
             else:
                 from .filter import local_ocr_fix
                 filtered_text = local_ocr_fix(raw_text)
+            t3 = time.perf_counter()
+            logger.info("Filter done in %.2fs (%d chars)", t3 - t2, len(filtered_text))
 
             from .filter import clean_for_speech
             cleaned_text = clean_for_speech(filtered_text) if filtered_text.strip() else ""
+            t4 = time.perf_counter()
+            logger.info("Clean done in %.2fs (%d chars)", t4 - t3, len(cleaned_text))
 
             self._write_debug_log(raw_text, filtered_text, cleaned_text)
 
@@ -109,8 +117,9 @@ class HotkeyListener:
                     winsound.Beep(400, 100)
                 return
 
-            logger.info("Speaking (%d chars)...", len(cleaned_text))
+            logger.info("Starting TTS (%d chars)... total so far: %.2fs", len(cleaned_text), t4 - t0)
             self._tts.speak(cleaned_text)
+            logger.info("TTS dispatched (total pipeline: %.2fs)", time.perf_counter() - t0)
 
         except Exception:
             logger.exception("Pipeline error")
