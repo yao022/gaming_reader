@@ -230,6 +230,12 @@ def local_ocr_fix(text: str) -> str:
     text = re.sub(r"\b04['']?\b", "of", text)
     # 90/ → got  (e.g. "9uess 90/" → "guess got")
     text = re.sub(r"\b90[/\\]?\b", "got", text)
+    # ñown → town  (ñ is OCR misread of t in some fonts)
+    text = re.sub(r"\bñown\b", "town", text, flags=re.IGNORECASE)
+    # of' → of  (leftover apostrophe from 04' fix)
+    text = re.sub(r"\bof['']", "of", text)
+    # Stray leading digit followed by You/were/were (e.g. "4 You were")
+    text = re.sub(r"(?<!\w)\d\s+(?=You\b|were\b|the\b)", "", text)
 
     # Word-specific f→t / garble fixes
     text = re.sub(r"\bdoubf\b", "doubt", text, flags=re.IGNORECASE)
