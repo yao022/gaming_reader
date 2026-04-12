@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "game-text-reader"
+version = "0.1.0"
+description = "Screen text reader for games — captures, OCRs, filters, and speaks game text aloud"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dependencies = [
+    "mss>=9.0",
+    "dxcam>=0.3",
+    "easyocr>=1.7",
+    "pytesseract>=0.3",
+    "anthropic>=0.30",
+    "edge-tts>=6.1",
+    "pyttsx3>=2.90",
+    "keyboard>=0.13",
+    "langdetect>=1.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "numpy>=1.26",
+    "Pillow>=10.0",
+]
+
+[project.scripts]
+game-text-reader = "game_text_reader.__main__:main"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

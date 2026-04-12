@@ -1,0 +1,51 @@
+# Game Text Reader configuration
+
+# Language for OCR and TTS
+language: es
+
+# TTS voices per language (Microsoft Edge TTS voice identifiers)
+# Spanish: es-ES-AlvaroNeural, es-ES-ElviraNeural, es-MX-DaliaNeural
+# English: en-US-GuyNeural, en-US-JennyNeural
+voices:
+  es: es-ES-AlvaroNeural
+  en: en-US-GuyNeural
+
+# Hotkey to trigger screen capture + read (with AI filter when available)
+hotkey: f8
+
+# Hotkey for local-only mode (no AI filter, no API cost, faster)
+hotkey_local: f9
+
+# Screen capture backend: "dxcam" (faster, preferred) or "mss" (fallback)
+capture_backend: dxcam
+
+# OCR backend:
+#   "winrt"       — Windows built-in OCR, hardware-accelerated (AMD/Intel GPU), fastest (~0.2s)
+#   "easyocr"     — deep-learning OCR, best accuracy but slow on CPU (~3s)
+#   "pytesseract" — traditional OCR, faster than easyocr on CPU
+ocr_backend: winrt
+
+# TTS backend: "edge-tts" (natural voices, requires internet) or "pyttsx3" (offline)
+tts_backend: edge-tts
+
+# TTS backend for local mode (F9) — pyttsx3 is offline/instant (no network delay)
+tts_backend_local: pyttsx3
+
+# Reading speed as a percentage above normal (0 = normal, 20 = 20% faster, 50 = 50% faster)
+# Applies to both edge-tts and pyttsx3
+tts_rate: 20
+
+# AI filter using Claude API to remove HUD/menu text and keep narrative content
+# Set to false if you don't have API credits
+ai_filter_enabled: true
+
+# Claude model to use for filtering
+ai_filter_model: claude-haiku-4-5-20251001
+
+# Sound feedback when capture is triggered
+sound_feedback: true
+
+# OCR languages (ISO 639-1 codes used by EasyOCR)
+ocr_languages:
+  - es
+  - en
