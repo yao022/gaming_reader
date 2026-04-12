@@ -306,6 +306,8 @@ _FINAL_EMPTY = re.compile(r"\n\s*\n\s*\n+")
 
 def clean_for_speech(text: str) -> str:
     """Final pass: strip any remaining URLs, symbols, and short junk lines."""
+    # Replace bullet/dash list markers with nothing (TTS would say "bullet")
+    text = re.sub(r"^[\s•·▪▸\-–—]+", "", text, flags=re.MULTILINE)
     text = _FINAL_URL.sub("", text)
     text = _FINAL_SYMBOLS.sub("", text)
     text = _FINAL_SHORT_LINES.sub("", text)

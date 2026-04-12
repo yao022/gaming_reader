@@ -48,6 +48,7 @@ class TTSEngine:
         self._backend = config.tts_backend
         self._voices = dict(config.voices)
         self._default_lang = config.language
+        self._rate = config.tts_rate  # % above normal, e.g. 20 = 20% faster
         self._lock = threading.Lock()
         self._current_thread: threading.Thread | None = None
         self._init_backend()
@@ -98,7 +99,8 @@ class TTSEngine:
 
             async def _stream() -> bytes:
                 """Collect all audio bytes from edge-tts."""
-                communicate = edge_tts.Communicate(text, voice)
+                rate_str = f"+{self._rate}%" if self._rate >= 0 else f"{self._rate}%"
+                communicate = edge_tts.Communicate(text, voice, rate=rate_str)
                 buf = bytearray()
                 async for chunk in communicate.stream():
                     if chunk["type"] == "audio":
@@ -154,7 +156,8 @@ class TTSEngine:
                     "Install English voice: Settings → Time & Language → Speech → Add voices.",
                     lang, available,
                 )
-            engine.setProperty("rate", 170)
+            base_rate = engine.getProperty("rate") or 200
+            engine.setProperty("rate", int(base_rate * (1 + self._rate / 100)))
             engine.say(text)
             engine.runAndWait()
             engine.stop()
