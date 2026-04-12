@@ -10,7 +10,7 @@ requires-python = ">=3.11"
 license = {text = "MIT"}
 dependencies = [
     "mss>=9.0",
-    "dxcam>=0.4",
+    "dxcam>=0.3",
     "easyocr>=1.7",
     "pytesseract>=0.3",
     "anthropic>=0.30",

@@ -88,8 +88,19 @@ class HotkeyListener:
                     winsound.Beep(400, 100)
                 return
 
-            logger.info("Speaking text (%d chars)...", len(filtered_text))
-            self._tts.speak(filtered_text)
+            # Clean symbols/URLs that TTS would read literally
+            from .filter import clean_for_speech
+
+            cleaned_text = clean_for_speech(filtered_text)
+            if not cleaned_text:
+                logger.info("No text left after cleaning for speech")
+                if self._sound_feedback:
+                    winsound.Beep(400, 100)
+                    winsound.Beep(400, 100)
+                return
+
+            logger.info("Speaking text (%d chars)...", len(cleaned_text))
+            self._tts.speak(cleaned_text)
 
         except Exception:
             logger.exception("Pipeline error")

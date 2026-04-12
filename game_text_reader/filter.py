@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -14,16 +15,35 @@ logger = logging.getLogger(__name__)
 _SYSTEM_PROMPT = """\
 You are a text filter for a video game screen reader tool designed for a visually impaired user.
 
-You will receive raw OCR text extracted from a game screenshot. Your job is to:
-1. KEEP only narrative content: notes, letters, documents, tutorial messages, item descriptions, \
-dialogue lines, story text, journal entries, objective descriptions.
-2. REMOVE irrelevant UI text: HUD counters (ammo, health, time), button prompts \
-(Press A, Press X, Press E), menu labels (Options, Settings, Save, Load, Inventory), \
-difficulty labels, control hints, version numbers, copyright notices.
-3. Clean up OCR artifacts (fix obvious misreads, remove garbage characters).
-4. Preserve the original language of the text — do NOT translate.
-5. Return ONLY the cleaned narrative text, nothing else. No explanations, no labels.
-6. If there is no narrative text at all, return exactly: [NO TEXT]
+The user captures their full screen while playing games. The OCR extracts ALL text visible on \
+screen, including text that is NOT part of the game. Your job is to return ONLY the game's \
+narrative text that the user wants to hear read aloud.
+
+REMOVE all of the following:
+- URLs, web addresses, file paths (anything with http, www, .com, .net, .png, slashes, etc.)
+- Browser UI: tab titles, address bar content, bookmark bar text
+- Operating system UI: taskbar text, clock/date, weather, "Buscar", Start menu, system tray
+- Window controls: minimize, maximize, close button labels
+- Desktop app names in taskbar (Chrome, Spotify, Discord, etc.)
+- Game HUD: ammo counters, health bars, stamina, money, score, timers, minimap labels
+- Button prompts: "Press A", "Press X", "Press E to interact", controller icons
+- Menu labels: Options, Settings, Save, Load, Inventory, Pause, Resume, Quit
+- Difficulty labels, control hints, version numbers, copyright notices
+- OCR garbage: random symbols, isolated characters, nonsensical character sequences
+
+KEEP only game narrative content:
+- Notes, letters, documents found in-game
+- Tutorial messages and objective descriptions
+- Item descriptions
+- Dialogue lines and subtitles
+- Story text, journal entries, lore
+
+ALSO:
+- Clean up OCR artifacts (fix obvious misreads like 0 for O, l for I, etc.)
+- Remove stray punctuation or symbols that don't belong in the text
+- Preserve the original language — do NOT translate
+- Return ONLY the cleaned narrative text, nothing else. No explanations, no labels, no quotes.
+- If there is no narrative text at all, return exactly: [NO TEXT]
 """
 
 
@@ -82,3 +102,25 @@ class TextFilter:
         except Exception as e:
             logger.error("AI filter failed: %s — returning raw text", e)
             return raw_text
+
+
+# Patterns to strip before sending text to TTS
+_URL_PATTERN = re.compile(
+    r"https?://\S+|www\.\S+|[a-zA-Z0-9_-]+\.(com|net|org|io|png|jpg|jpeg|gif|html)\S*",
+    re.IGNORECASE,
+)
+_SYMBOL_NOISE = re.compile(r"[#+=%&@{}\[\]<>|\\^~`]")
+_MULTI_SPACE = re.compile(r"  +")
+_EMPTY_LINES = re.compile(r"\n\s*\n\s*\n+")
+
+
+def clean_for_speech(text: str) -> str:
+    """Remove URLs, stray symbols, and OCR noise so TTS reads cleanly."""
+    # Strip URLs
+    text = _URL_PATTERN.sub("", text)
+    # Strip symbols that TTS reads literally ("plus", "hashtag", etc.)
+    text = _SYMBOL_NOISE.sub("", text)
+    # Collapse leftover whitespace
+    text = _MULTI_SPACE.sub(" ", text)
+    text = _EMPTY_LINES.sub("\n\n", text)
+    return text.strip()
