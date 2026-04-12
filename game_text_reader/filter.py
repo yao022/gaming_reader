@@ -38,6 +38,10 @@ single characters, nonsensical sequences like "@ | * | e | @").
    - "0" often means "o" (e.g. "04'" → "of")
    - "1" often means "I" (e.g. "1 doubf" → "I doubt")
    - "l" at the end of a word before ")" often means "!" (e.g. "latel)" → "late!")
+   - In Spanish, "i" or "!" before an uppercase letter often means "¡" (e.g. "iNO" → "¡NO", "iMÁXIMA" → "¡MÁXIMA")
+   - In Spanish, double-r (rr) is often misread as a quote: 'Ba"y' → "Barry"
+   - "«)" or "«]" often means "ro" (e.g. "lib«)" → "libro")
+   - "p.a" often means "persona"
    - Letters get swapped, merged, or garbled — use context to figure out the real words
    - Punctuation and spacing get mangled
    Use your knowledge of common game narratives, English, and Spanish to reconstruct the text.
@@ -284,6 +288,33 @@ def local_ocr_fix(text: str) -> str:
     # Jef → yet
     text = re.sub(r"\bJef\b", "yet", text)
 
+    # ---------------------------------------------------------------------------
+    # Spanish-specific OCR fixes
+    # ---------------------------------------------------------------------------
+
+    # "i" or "!" at start of word/line before uppercase → ¡ (inverted exclamation)
+    # e.g. "iNO llegues" → "¡NO llegues", "iMÁXIMA" → "¡MÁXIMA"
+    text = re.sub(r"(?<![a-zA-ZáéíóúñüÁÉÍÓÚÑÜ])[i!]([A-ZÁÉÍÓÚÑÜ])", r"¡\1", text)
+
+    # "A" at start of word before lowercase → ¿ if it looks like a question starter
+    # e.g. "ACómo" → "¿Cómo" — too risky; handle specific common cases instead
+    text = re.sub(r"\bACómo\b", "¿Cómo", text)
+    text = re.sub(r"\bAQué\b", "¿Qué", text)
+    text = re.sub(r"\bAPor\b", "¿Por", text)
+
+    # Double letter misread: letter + " + letter → letter + rr + letter
+    # e.g. "Ba"ry" or "Ba"y" → "Barry" (stylized fonts render double-r oddly)
+    text = re.sub(r'([a-zA-ZáéíóúñüÁÉÍÓÚÑÜ])"([a-zA-ZáéíóúñüÁÉÍÓÚÑÜ])', r"\1rr\2", text)
+
+    # «) or «] → ro (common misread of "ro" e.g. "lib«)" → "libro")
+    text = re.sub(r"«[)\]]", "ro", text)
+    # Standalone « → nothing (leftover noise)
+    text = re.sub(r"«", "", text)
+
+    # "p.a" → "persona" (common OCR collapse of "persona")
+    text = re.sub(r"\bp\.a\b", "persona", text, flags=re.IGNORECASE)
+
+    # ---------------------------------------------------------------------------
     # Remove remaining stray symbols
     text = _SYMBOL_NOISE.sub("", text)
     text = _MULTI_SPACE.sub(" ", text)
