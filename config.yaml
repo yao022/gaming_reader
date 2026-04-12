@@ -40,7 +40,7 @@ tts_rate: 20
 ai_filter_enabled: true
 
 # Claude model to use for filtering
-ai_filter_model: claude-3-5-haiku-20241022
+ai_filter_model: claude-haiku-4-5-20251001
 
 # Sound feedback when capture is triggered
 sound_feedback: true

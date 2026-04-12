@@ -25,7 +25,7 @@ _DEFAULTS = {
     "tts_backend_local": "pyttsx3",
     "tts_rate": 20,
     "ai_filter_enabled": True,
-    "ai_filter_model": "claude-3-5-haiku-20241022",
+    "ai_filter_model": "claude-haiku-4-5-20251001",
     "sound_feedback": True,
     "ocr_languages": ["es", "en"],
 }
@@ -45,7 +45,7 @@ class Config:
     tts_backend_local: str = "pyttsx3"
     tts_rate: int = 20
     ai_filter_enabled: bool = True
-    ai_filter_model: str = "claude-3-5-haiku-20241022"
+    ai_filter_model: str = "claude-haiku-4-5-20251001"
     sound_feedback: bool = True
     ocr_languages: list[str] = field(default_factory=lambda: ["es", "en"])
 
