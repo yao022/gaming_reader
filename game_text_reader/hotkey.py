@@ -44,6 +44,7 @@ class HotkeyListener:
         self._filter = text_filter
         self._tts = tts
         self._tts_local = tts_local if tts_local is not None else tts
+        self._debug_logs = config.debug_logs
         self._processing = False
 
     def start(self) -> None:
@@ -110,7 +111,8 @@ class HotkeyListener:
             t4 = time.perf_counter()
             logger.info("Clean done in %.2fs (%d chars)", t4 - t3, len(cleaned_text))
 
-            self._write_debug_log(raw_text, filtered_text, cleaned_text)
+            if self._debug_logs:
+                self._write_debug_log(raw_text, filtered_text, cleaned_text)
 
             if not cleaned_text:
                 logger.info("No narrative text after filtering/cleaning")

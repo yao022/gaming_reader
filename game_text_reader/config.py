@@ -11,7 +11,19 @@ from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+def _get_app_dir() -> Path:
+    """Return the directory where config.yaml and .env should live.
+
+    When running as a PyInstaller .exe, this is the directory containing
+    the .exe file (not the temp _MEIPASS dir). When running from source,
+    this is the project root.
+    """
+    import sys
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent.parent
+
+_PROJECT_ROOT = _get_app_dir()
 _DEFAULT_CONFIG_PATH = _PROJECT_ROOT / "config.yaml"
 
 _DEFAULTS = {
@@ -27,6 +39,7 @@ _DEFAULTS = {
     "ai_filter_enabled": True,
     "ai_filter_model": "claude-haiku-4-5-20251001",
     "sound_feedback": True,
+    "debug_logs": True,
     "ocr_languages": ["es", "en"],
 }
 
@@ -47,6 +60,7 @@ class Config:
     ai_filter_enabled: bool = True
     ai_filter_model: str = "claude-haiku-4-5-20251001"
     sound_feedback: bool = True
+    debug_logs: bool = True
     ocr_languages: list[str] = field(default_factory=lambda: ["es", "en"])
 
 

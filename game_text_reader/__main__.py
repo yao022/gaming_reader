@@ -7,8 +7,12 @@ import sys
 
 
 def main() -> None:
+    import os
+
+    frozen = getattr(sys, "frozen", False)
+    log_level = logging.WARNING if frozen else logging.INFO
     logging.basicConfig(
-        level=logging.INFO,
+        level=log_level,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         datefmt="%H:%M:%S",
     )

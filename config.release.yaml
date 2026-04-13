@@ -1,0 +1,32 @@
+# Game Text Reader — release config (bundled with .exe)
+# Place this file next to GameTextReader.exe and rename to config.yaml
+# Place your .env file (with ANTHROPIC_API_KEY=sk-ant-...) next to the .exe too
+
+language: es
+
+voices:
+  es: es-ES-AlvaroNeural
+  en: en-US-GuyNeural
+
+hotkey: f8
+hotkey_local: f9
+
+capture_backend: dxcam
+ocr_backend: winrt
+tts_backend: edge-tts
+tts_backend_local: pyttsx3
+
+# Reading speed (0 = normal, 20 = 20% faster)
+tts_rate: 20
+
+ai_filter_enabled: true
+ai_filter_model: claude-haiku-4-5-20251001
+
+sound_feedback: true
+
+# Disable debug log files (no debug_logs/ folder created)
+debug_logs: false
+
+ocr_languages:
+  - es
+  - en
