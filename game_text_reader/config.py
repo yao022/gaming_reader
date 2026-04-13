@@ -31,6 +31,8 @@ _DEFAULTS = {
     "voices": {"es": "es-ES-AlvaroNeural", "en": "en-US-GuyNeural"},
     "hotkey": "f8",
     "hotkey_local": "f9",
+    "hotkey_local_nice": "f10",
+    "hotkey_stop": "f7",
     "capture_backend": "dxcam",
     "ocr_backend": "winrt",
     "tts_backend": "edge-tts",
@@ -52,6 +54,8 @@ class Config:
     )
     hotkey: str = "f8"
     hotkey_local: str = "f9"
+    hotkey_local_nice: str = "f10"
+    hotkey_stop: str = "f7"
     capture_backend: str = "dxcam"
     ocr_backend: str = "winrt"
     tts_backend: str = "edge-tts"

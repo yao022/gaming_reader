@@ -8,8 +8,10 @@ voices:
   es: es-ES-AlvaroNeural
   en: en-US-GuyNeural
 
+hotkey_stop: f7
 hotkey: f8
 hotkey_local: f9
+hotkey_local_nice: f10
 
 capture_backend: dxcam
 ocr_backend: winrt

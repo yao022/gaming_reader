@@ -1,8 +1,10 @@
 """Hotkey listener that orchestrates the capture → OCR → filter → TTS pipeline.
 
-Two hotkeys are registered:
-  F8 (hotkey)       — full pipeline: AI filter (with local fallback)
-  F9 (hotkey_local) — local-only: skips AI, uses rule-based OCR corrector
+Hotkeys:
+  F7  (hotkey_stop)       — stop TTS playback immediately
+  F8  (hotkey)            — full pipeline: AI filter + edge-tts (natural voice)
+  F9  (hotkey_local)      — local-only: rule-based OCR + pyttsx3 (instant, robotic)
+  F10 (hotkey_local_nice) — local-only: rule-based OCR + edge-tts (natural voice)
 """
 
 from __future__ import annotations
@@ -38,6 +40,8 @@ class HotkeyListener:
     ) -> None:
         self._hotkey = config.hotkey
         self._hotkey_local = config.hotkey_local
+        self._hotkey_local_nice = config.hotkey_local_nice
+        self._hotkey_stop = config.hotkey_stop
         self._sound_feedback = config.sound_feedback
         self._capture = capture
         self._ocr = ocr
@@ -51,37 +55,61 @@ class HotkeyListener:
         """Register hotkeys and block until Ctrl+C."""
         import keyboard
 
+        keyboard.add_hotkey(self._hotkey_stop, self._on_hotkey_stop)
         keyboard.add_hotkey(self._hotkey, self._on_hotkey_ai)
         keyboard.add_hotkey(self._hotkey_local, self._on_hotkey_local)
+        keyboard.add_hotkey(self._hotkey_local_nice, self._on_hotkey_local_nice)
         logger.info(
-            "'%s' = AI filter  |  '%s' = local only  |  Ctrl+C to quit",
+            "'%s' = stop  |  '%s' = AI+nice  |  '%s' = local+fast  |  '%s' = local+nice  |  Ctrl+C to quit",
+            self._hotkey_stop,
             self._hotkey,
             self._hotkey_local,
+            self._hotkey_local_nice,
         )
         keyboard.wait()
 
+    def _on_hotkey_stop(self) -> None:
+        """Handle F7 — stop TTS playback immediately."""
+        self._tts.stop()
+        self._tts_local.stop()
+        if self._sound_feedback:
+            winsound.Beep(500, 80)
+
     def _on_hotkey_ai(self) -> None:
-        """Handle F8 — full pipeline with AI filter."""
+        """Handle F8 — full pipeline with AI filter + edge-tts."""
         if self._processing:
             return
-        threading.Thread(target=self._run_pipeline, args=(True,), daemon=True).start()
+        threading.Thread(target=self._run_pipeline, args=(True, "ai"), daemon=True).start()
 
     def _on_hotkey_local(self) -> None:
-        """Handle F9 — local-only, no AI call."""
+        """Handle F9 — local OCR + pyttsx3 (instant, robotic voice)."""
         if self._processing:
             return
-        threading.Thread(target=self._run_pipeline, args=(False,), daemon=True).start()
+        threading.Thread(target=self._run_pipeline, args=(False, "local"), daemon=True).start()
 
-    def _run_pipeline(self, use_ai: bool) -> None:
-        """Execute the pipeline: beep → capture → OCR → filter → TTS."""
+    def _on_hotkey_local_nice(self) -> None:
+        """Handle F10 — local OCR + edge-tts (natural voice, ~3s delay)."""
+        if self._processing:
+            return
+        threading.Thread(target=self._run_pipeline, args=(False, "local_nice"), daemon=True).start()
+
+    def _run_pipeline(self, use_ai: bool, mode: str = "ai") -> None:
+        """Execute the pipeline: beep → capture → OCR → filter → TTS.
+
+        mode: "ai" (F8), "local" (F9), or "local_nice" (F10)
+        """
         self._processing = True
         t0 = time.perf_counter()
         try:
             if self._sound_feedback:
-                # Different beep pitch for AI vs local so you can tell them apart
-                winsound.Beep(800 if use_ai else 600, 150)
+                beep_freq = {
+                    "ai": 800,         # F8 — highest pitch
+                    "local_nice": 700,  # F10 — medium pitch
+                    "local": 600,       # F9 — lowest pitch
+                }
+                winsound.Beep(beep_freq.get(mode, 600), 150)
 
-            logger.info("Capturing screen... (mode: %s)", "AI" if use_ai else "local")
+            logger.info("Capturing screen... (mode: %s)", mode)
             image = self._capture.grab()
             t1 = time.perf_counter()
             logger.info("Captured (%dx%d) in %.2fs", image.shape[1], image.shape[0], t1 - t0)
@@ -121,7 +149,8 @@ class HotkeyListener:
                     winsound.Beep(400, 100)
                 return
 
-            tts_engine = self._tts if use_ai else self._tts_local
+            # F8 (ai) and F10 (local_nice) use edge-tts; F9 (local) uses pyttsx3
+            tts_engine = self._tts_local if mode == "local" else self._tts
             logger.info("Starting TTS (%d chars)... total so far: %.2fs", len(cleaned_text), t4 - t0)
             tts_engine.speak(cleaned_text)
             logger.info("TTS dispatched (total pipeline: %.2fs)", time.perf_counter() - t0)

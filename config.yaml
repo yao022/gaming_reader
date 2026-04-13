@@ -10,11 +10,17 @@ voices:
   es: es-ES-AlvaroNeural
   en: en-US-GuyNeural
 
-# Hotkey to trigger screen capture + read (with AI filter when available)
+# F7 — stop TTS playback immediately
+hotkey_stop: f7
+
+# F8 — full pipeline: AI filter + edge-tts (natural voice, ~3s)
 hotkey: f8
 
-# Hotkey for local-only mode (no AI filter, no API cost, faster)
+# F9 — local-only: rule-based OCR + pyttsx3 (instant, robotic voice)
 hotkey_local: f9
+
+# F10 — local-only: rule-based OCR + edge-tts (natural voice, ~3s)
+hotkey_local_nice: f10
 
 # Screen capture backend: "dxcam" (faster, preferred) or "mss" (fallback)
 capture_backend: dxcam
@@ -33,7 +39,7 @@ tts_backend_local: pyttsx3
 
 # Reading speed as a percentage above normal (0 = normal, 20 = 20% faster, 50 = 50% faster)
 # Applies to both edge-tts and pyttsx3
-tts_rate: 20
+tts_rate: 15
 
 # AI filter using Claude API to remove HUD/menu text and keep narrative content
 # Set to false if you don't have API credits

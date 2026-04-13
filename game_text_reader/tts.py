@@ -107,6 +107,8 @@ class TTSEngine:
         self._rate = config.tts_rate  # % above normal, e.g. 20 = 20% faster
         self._lock = threading.Lock()
         self._current_thread: threading.Thread | None = None
+        self._stop_requested = False
+        self._pyttsx3_engine = None  # cached for stop()
         self._init_backend()
 
     def _init_backend(self) -> None:
@@ -127,11 +129,29 @@ class TTSEngine:
             return self._voices[lang]
         return self._voices.get(self._default_lang, next(iter(self._voices.values())))
 
+    def stop(self) -> None:
+        """Stop any currently playing audio immediately."""
+        self._stop_requested = True
+        # Stop MCI playback
+        try:
+            winmm = ctypes.windll.winmm  # type: ignore[attr-defined]
+            winmm.mciSendStringW("close gtr_audio", None, 0, None)
+        except Exception:
+            pass
+        # Stop pyttsx3 if it's running
+        if self._pyttsx3_engine is not None:
+            try:
+                self._pyttsx3_engine.stop()
+            except Exception:
+                pass
+        logger.info("TTS stopped")
+
     def speak(self, text: str) -> None:
         """Speak text in a background thread (non-blocking), auto-detecting language."""
         if not text.strip():
             return
 
+        self._stop_requested = False
         lang = detect_language(text, default=self._default_lang)
         voice = self._voice_for_lang(lang)
         logger.info("TTS: lang='%s', voice='%s'", lang, voice)
@@ -193,6 +213,7 @@ class TTSEngine:
             import pyttsx3
 
             engine = pyttsx3.init()
+            self._pyttsx3_engine = engine
             voices = engine.getProperty("voices")
             lang_keywords = {"es": "spanish", "en": "english", "fr": "french", "de": "german"}
             keyword = lang_keywords.get(lang, lang)
@@ -217,6 +238,7 @@ class TTSEngine:
             engine.say(text)
             engine.runAndWait()
             engine.stop()
+            self._pyttsx3_engine = None
         except Exception as e:
             logger.error("pyttsx3 TTS failed: %s", e)
 
