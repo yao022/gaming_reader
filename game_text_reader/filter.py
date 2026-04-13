@@ -300,8 +300,17 @@ def local_ocr_fix(text: str) -> str:
     # standalone "10" at start of word before a verb-like word → "lo"
     text = re.sub(r"\b10 (cogió|hizo|dijo|puso|vio|tiene|hace|sabe|fue)\b", r"lo \1", text, flags=re.IGNORECASE)
 
+    # In UPPERCASE sequences: 0 → O, 1 → I (e.g. "PR10RIDAD" → "PRIORIDAD")
+    def _fix_digits_in_caps(m: re.Match) -> str:
+        return m.group(0).replace("0", "O").replace("1", "I")
+    text = re.sub(r"[A-ZÁÉÍÓÚÑÜ][A-ZÁÉÍÓÚÑÜ01]{2,}", _fix_digits_in_caps, text)
+
     # "lMA" → "IMA", "lDAD" → "IDAD" — lowercase l between uppercase = uppercase I
     text = re.sub(r"(?<=[A-ZÁÉÍÓÚÑÜ])l(?=[A-ZÁÉÍÓÚÑÜ])", "I", text)
+
+    # Split merged UPPERCASE words (e.g. "MÁXIMAPRIORIDAD" → "MÁXIMA PRIORIDAD")
+    # Insert space between lowercase→uppercase or known word boundaries
+    text = re.sub(r"([A-ZÁÉÍÓÚÑÜ]{4,})(PRIORIDAD|MÁXIMA|IMPORTANTE|URGENTE)", r"\1 \2", text)
 
     # ---------------------------------------------------------------------------
     # Spanish-specific OCR fixes
@@ -323,8 +332,14 @@ def local_ocr_fix(text: str) -> str:
 
     # «) or «] → ro (common misread of "ro" e.g. "lib«)" → "libro")
     text = re.sub(r"«[)\]]", "ro", text)
+    # «y → rry (e.g. "aa«y" → "aarry" which becomes "Barry" with other fixes)
+    text = re.sub(r"«y", "rry", text)
     # Standalone « → nothing (leftover noise)
     text = re.sub(r"«", "", text)
+
+    # Specific known word fixes (common game names/words badly OCR'd)
+    text = re.sub(r"\baa«?r?ry\b", "Barry", text, flags=re.IGNORECASE)
+    text = re.sub(r"\baarry\b", "Barry", text, flags=re.IGNORECASE)
 
     # "p.a" → "persona" (common OCR collapse of "persona")
     text = re.sub(r"\bp\.a\b", "persona", text, flags=re.IGNORECASE)
