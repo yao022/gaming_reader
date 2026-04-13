@@ -41,9 +41,16 @@ single characters, nonsensical sequences like "@ | * | e | @").
    - In Spanish, "i" or "!" before an uppercase letter often means "¡" (e.g. "iNO" → "¡NO", "iMÁXIMA" → "¡MÁXIMA")
    - In Spanish, double-r (rr) is often misread as a quote: 'Ba"y' → "Barry"
    - "«)" or "«]" often means "ro" (e.g. "lib«)" → "libro")
+   - "«y" often means "rry" (e.g. "aa«y" → "Barry")
    - "p.a" often means "persona"
+   - "eI" (capital I) often means "el" in Spanish
+   - "10" between words often means "lo" in Spanish (e.g. "que 10 cogió" → "que lo cogió")
+   - In UPPERCASE text, "0" → "O" and "1" → "I" (e.g. "PR10RIDAD" → "PRIORIDAD")
+   - Words sometimes get merged without spaces (e.g. "MÁXIMAPRIORIDAD" → "MÁXIMA PRIORIDAD")
+   - "ta Kie" or similar garbled fragments may mean "llegues tarde" — use context
    - Letters get swapped, merged, or garbled — use context to figure out the real words
    - Punctuation and spacing get mangled
+   - Some words may be completely missing from the OCR — if you can infer them from context, add them
    Use your knowledge of common game narratives, English, and Spanish to reconstruct the text.
 4. Preserve the original language of the text — do NOT translate.
 5. Return ONLY the cleaned, reconstructed narrative text. No explanations, no labels, no quotes.

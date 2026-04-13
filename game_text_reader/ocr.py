@@ -86,9 +86,11 @@ class OCREngine:
 
     def extract(self, image: np.ndarray) -> str:
         """Extract text from an RGB numpy array image. Returns concatenated text."""
-        image = _downscale(image)
         if self._backend == "winrt":
+            # Windows OCR is hardware-accelerated — no need to downscale,
+            # and keeping full resolution helps capture small text.
             return self._extract_winrt(image)
+        image = _downscale(image)
         if self._backend == "easyocr" and self._easyocr_reader is not None:
             return self._extract_easyocr(image)
         return self._extract_pytesseract(image)
