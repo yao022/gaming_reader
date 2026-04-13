@@ -132,9 +132,11 @@ class TTSEngine:
     def stop(self) -> None:
         """Stop any currently playing audio immediately."""
         self._stop_requested = True
-        # Stop MCI playback
+        # Stop MCI playback — must send "stop" before "close" to interrupt
+        # an ongoing "play ... wait" on another thread
         try:
             winmm = ctypes.windll.winmm  # type: ignore[attr-defined]
+            winmm.mciSendStringW("stop gtr_audio", None, 0, None)
             winmm.mciSendStringW("close gtr_audio", None, 0, None)
         except Exception:
             pass
@@ -142,6 +144,10 @@ class TTSEngine:
         if self._pyttsx3_engine is not None:
             try:
                 self._pyttsx3_engine.stop()
+            except Exception:
+                pass
+            try:
+                self._pyttsx3_engine.endLoop()
             except Exception:
                 pass
         logger.info("TTS stopped")
@@ -270,6 +276,10 @@ def _play_mp3_mci(path: str) -> None:
     try:
         winmm = ctypes.windll.winmm  # type: ignore[attr-defined]
         alias = "gtr_audio"
+        # Clean up any leftover from a previous interrupted play
+        winmm.mciSendStringW(f"stop {alias}", None, 0, None)
+        winmm.mciSendStringW(f"close {alias}", None, 0, None)
+        # Open, play (blocking), and close
         winmm.mciSendStringW(f'open "{path}" type mpegvideo alias {alias}', None, 0, None)
         winmm.mciSendStringW(f"play {alias} wait", None, 0, None)
         winmm.mciSendStringW(f"close {alias}", None, 0, None)

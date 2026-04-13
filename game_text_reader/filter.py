@@ -289,6 +289,21 @@ def local_ocr_fix(text: str) -> str:
     text = re.sub(r"\bJef\b", "yet", text)
 
     # ---------------------------------------------------------------------------
+    # l / I / 1 / 0 confusion (extremely common in OCR)
+    # ---------------------------------------------------------------------------
+
+    # "eI" → "el" (Spanish article — uppercase I misread as lowercase L)
+    text = re.sub(r"\beI\b", "el", text)
+
+    # " 10 " → " lo " when between common Spanish words (1→l, 0→o)
+    text = re.sub(r"\b(que|se|no|ya|me|te|le|si) 10\b", r"\1 lo", text, flags=re.IGNORECASE)
+    # standalone "10" at start of word before a verb-like word → "lo"
+    text = re.sub(r"\b10 (cogió|hizo|dijo|puso|vio|tiene|hace|sabe|fue)\b", r"lo \1", text, flags=re.IGNORECASE)
+
+    # "lMA" → "IMA", "lDAD" → "IDAD" — lowercase l between uppercase = uppercase I
+    text = re.sub(r"(?<=[A-ZÁÉÍÓÚÑÜ])l(?=[A-ZÁÉÍÓÚÑÜ])", "I", text)
+
+    # ---------------------------------------------------------------------------
     # Spanish-specific OCR fixes
     # ---------------------------------------------------------------------------
 
