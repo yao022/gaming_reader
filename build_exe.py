@@ -101,11 +101,39 @@ def main() -> None:
         shutil.copy2(release_config, dest_config)
         print(f"\nCopied config.yaml to {dest_config}")
 
-    # Create a template .env file
-    env_template = BUILD_DIR / ".env.example"
-    env_template.write_text(
-        "# Paste your Anthropic API key here and rename this file to .env\n"
+    # Create env.example (no leading dot — visible in Windows Explorer)
+    env_example = BUILD_DIR / "env.example"
+    env_example.write_text(
+        "# 1. Paste your Anthropic API key below\n"
+        "# 2. Save this file as .env  (rename: remove the word 'example')\n"
         "ANTHROPIC_API_KEY=sk-ant-api03-YOUR-KEY-HERE\n",
+        encoding="utf-8",
+    )
+
+    # Create a visible README
+    readme = BUILD_DIR / "README.txt"
+    readme.write_text(
+        "Game Text Reader\n"
+        "================\n\n"
+        "SETUP (first time only):\n"
+        "  1. Rename 'env.example' to '.env'\n"
+        "     (In Windows Explorer: View → Show hidden items if you can't see it)\n"
+        "  2. Open .env with Notepad and paste your Anthropic API key:\n"
+        "        ANTHROPIC_API_KEY=sk-ant-api03-YOUR-KEY-HERE\n"
+        "  3. (Optional) Edit config.yaml to change settings\n\n"
+        "HOW TO RUN:\n"
+        "  Double-click GameTextReader.exe\n"
+        "  OR right-click → Run as administrator (if hotkeys don't work)\n\n"
+        "HOTKEYS (while the app is running):\n"
+        "  F7  — Stop reading immediately\n"
+        "  F8  — Capture + AI filter + natural voice (~3s)\n"
+        "  F9  — Capture + local filter + fast voice (~0.5s)\n"
+        "  F10 — Capture + local filter + natural voice (~3s)\n"
+        "  Ctrl+C in the console window — Quit\n\n"
+        "NOTES:\n"
+        "  - F8 requires internet + Anthropic API key (costs fractions of a cent per use)\n"
+        "  - F9/F10 work offline, no API key needed\n"
+        "  - If hotkeys don't work in fullscreen games, run as administrator\n",
         encoding="utf-8",
     )
 
@@ -115,10 +143,9 @@ def main() -> None:
     print(f"\nOutput folder: {BUILD_DIR}")
     print(f"\nTo use on your gaming PC:")
     print(f"  1. Copy the entire 'GameTextReader' folder to your gaming PC")
-    print(f"  2. Rename .env.example to .env and paste your API key")
-    print(f"  3. (Optional) Edit config.yaml to change settings")
-    print(f"  4. Run GameTextReader.exe")
-    print(f"  5. Press F8 (AI mode) or F9 (local mode) while gaming!")
+    print(f"  2. Rename env.example to .env and paste your API key")
+    print(f"  3. Run GameTextReader.exe (as admin if hotkeys don't respond)")
+    print(f"  4. Press F8/F9/F10 while gaming, F7 to stop!")
 
 
 if __name__ == "__main__":
